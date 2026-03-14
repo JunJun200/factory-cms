@@ -8,7 +8,7 @@ app.secret_key = 'super_secret_key_for_factory_website'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 DATABASE = 'database.db'
-AMAP_EMBED_URL = 'https://uri.amap.com/marker?position=116.7093,38.0366&name=%E5%8D%97%E7%9A%AE%E5%8E%BF%E5%9B%BD%E7%91%9E%E4%BA%94%E9%87%91%E5%88%B6%E9%80%A0%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&src=factory-cms&coordinate=gaode&callnative=0'
+AMAP_EMBED_URL = 'https://surl.amap.com/aWkIf6KwehP'
 GOOGLE_EMBED_URL = 'https://maps.google.com/maps?q=Nanpi%20County%20Guorui%20Hardware%20Manufacturing%20Co.%2C%20Ltd.%2C%20Hebei%2C%20China&output=embed'
 
 # --- Database Setup ---
