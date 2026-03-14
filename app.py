@@ -1,6 +1,8 @@
 import os
 import sqlite3
+from urllib.parse import quote_plus
 from flask import Flask, render_template, request, redirect, url_for, session, g, flash
+from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -8,8 +10,13 @@ app.secret_key = 'super_secret_key_for_factory_website'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 DATABASE = 'database.db'
-AMAP_EMBED_URL = 'https://surl.amap.com/aWkIf6KwehP'
-GOOGLE_EMBED_URL = 'https://maps.google.com/maps?q=Nanpi%20County%20Guorui%20Hardware%20Manufacturing%20Co.%2C%20Ltd.%2C%20Hebei%2C%20China&output=embed'
+AMAP_LONGITUDE = '116.73'
+AMAP_LATITUDE = '38.13'
+AMAP_MARKER_BASE_URL = 'https://uri.amap.com/marker?position={lng},{lat}&name={name}&coordinate=gaode&callnative=0'
+ADMIN_PASSWORD_HASH = os.getenv(
+    'ADMIN_PASSWORD_HASH',
+    'scrypt:32768:8:1$8u59Ael7UIuF3xPg$81fbf4d206bbd09fc44636ece26243329fde4ebee666007a172924fc51c3ff7ffed4f154487a0c7cf800507f7b71705b44eef54b5b90fe0af560ab6d50af8d8c'
+)
 
 # --- Database Setup ---
 def get_db():
@@ -90,13 +97,7 @@ def ensure_contact_config(db):
         ('email', 'grmetalstamping@outlook.com', 'grmetalstamping@outlook.com')
     ]
     db.executemany(
-        '''
-        INSERT INTO site_config (key, value_zh, value_en)
-        VALUES (?, ?, ?)
-        ON CONFLICT(key) DO UPDATE SET
-            value_zh=excluded.value_zh,
-            value_en=excluded.value_en
-        ''',
+        'INSERT OR IGNORE INTO site_config (key, value_zh, value_en) VALUES (?, ?, ?)',
         configs
     )
 
@@ -117,6 +118,14 @@ def get_trans(key):
 
 def config_val(key):
     return get_trans(key)
+
+def get_map_embed_url():
+    company = get_trans('site_title')
+    return AMAP_MARKER_BASE_URL.format(
+        lng=AMAP_LONGITUDE,
+        lat=AMAP_LATITUDE,
+        name=quote_plus(company.strip())
+    )
 
 def product_image_path(product):
     image_path = product['image_path'] if product and product['image_path'] else ''
@@ -140,7 +149,7 @@ app.jinja_env.globals.update(
 def index():
     db = get_db()
     products = db.execute('SELECT * FROM products LIMIT 4').fetchall()
-    map_embed_url = AMAP_EMBED_URL if get_lang() == 'zh' else GOOGLE_EMBED_URL
+    map_embed_url = get_map_embed_url()
     return render_template('index.html', products=products, map_embed_url=map_embed_url)
 
 @app.route('/set_lang/<lang>')
@@ -159,7 +168,7 @@ def product_detail(product_id):
 
 @app.route('/contact')
 def contact():
-    map_embed_url = AMAP_EMBED_URL if get_lang() == 'zh' else GOOGLE_EMBED_URL
+    map_embed_url = get_map_embed_url()
     return render_template('contact.html', map_embed_url=map_embed_url)
 
 # --- Admin Routes ---
@@ -172,7 +181,7 @@ def admin_login():
 
 @app.route('/admin/login', methods=['POST'])
 def admin_do_login():
-    if request.form['password'] == 'admin123': # Simple password for demo
+    if check_password_hash(ADMIN_PASSWORD_HASH, request.form['password']):
         session['logged_in'] = True
         return redirect(url_for('admin_dashboard'))
     flash('密码错误')
