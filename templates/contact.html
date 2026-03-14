@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section-block contact-block">
+    <div class="container shell">
+        <h1 class="section-title">{{ 'Contact Us' if session.get('lang') == 'en' else '联系我们' }}</h1>
+        <div class="contact-layout">
+            <div class="contact-list">
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <h4>{{ 'Address' if session.get('lang') == 'en' else '工厂地址' }}</h4>
+                        <p>{{ config_val('address') }}</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <div>
+                        <h4>{{ 'Phone' if session.get('lang') == 'en' else '联系电话' }}</h4>
+                        <p>{{ config_val('phone') }}</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fab fa-whatsapp"></i>
+                    <div>
+                        <h4>WhatsApp</h4>
+                        <p>{{ config_val('whatsapp') }}</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <h4>{{ 'Email' if session.get('lang') == 'en' else '电子邮箱' }}</h4>
+                        <p>{{ config_val('email') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="map-box">
+                <iframe src="{{ map_embed_url }}" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

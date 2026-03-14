@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>产品编辑 - {{ config_val('company_name') }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h2 class="mb-4">{{ '新增产品' if action == 'add' else '编辑产品' }}</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">中文名称</label>
+                    <input type="text" name="name_zh" class="form-control" value="{{ product.name_zh if product else '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">英文名称</label>
+                    <input type="text" name="name_en" class="form-control" value="{{ product.name_en if product else '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">中文描述</label>
+                    <textarea name="desc_zh" class="form-control" rows="3">{{ product.desc_zh if product else '' }}</textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">英文描述</label>
+                    <textarea name="desc_en" class="form-control" rows="3">{{ product.desc_en if product else '' }}</textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">中文规格参数</label>
+                    <textarea name="specs_zh" class="form-control" rows="2">{{ product.specs_zh if product else '' }}</textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">英文规格参数</label>
+                    <textarea name="specs_en" class="form-control" rows="2">{{ product.specs_en if product else '' }}</textarea>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">产品图片</label>
+                    <input type="file" name="image" class="form-control">
+                    {% if product and product.image_path %}
+                        <div class="mt-2">当前图片：<img src="{{ url_for('static', filename=product.image_path) }}" height="100"></div>
+                    {% endif %}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ '创建产品' if action == 'add' else '保存修改' }}</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">返回</a>
+        </form>
+    </div>
+</body>
+</html>

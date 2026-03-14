@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-banner" style="background-image: linear-gradient(rgba(8, 20, 40, 0.45), rgba(8, 20, 40, 0.45)), url('{{ url_for('static', filename='images/factory.jpg') }}');">
+    <div class="container shell hero-inner">
+        <h1>{{ config_val('hero_title') }}</h1>
+        <p>{{ config_val('hero_subtitle') }}</p>
+        <a href="#contact" class="hero-btn">{{ 'Contact Us' if session.get('lang') == 'en' else '立即咨询' }}</a>
+    </div>
+</section>
+
+<section class="section-block about-block">
+    <div class="container shell">
+        <h2 class="section-title">{{ 'About Us' if session.get('lang') == 'en' else '关于我们' }}</h2>
+        <div class="about-panel">
+            {% if session.get('lang') == 'en' %}
+                <p>Nanpi County Guorui Hardware Manufacturing Co., Ltd. focuses on precision metal stamping, mold development and supporting processing. We provide stable quality, fast delivery and bilingual service for global customers.</p>
+                <ul>
+                    <li>Years of manufacturing experience</li>
+                    <li>In-house mold and stamping production</li>
+                    <li>Strict quality control process</li>
+                    <li>Support for OEM / custom projects</li>
+                </ul>
+            {% else %}
+                <p>南皮县国瑞五金制造有限公司专注精密五金冲压、模具开发与配套加工，面向国内外客户提供稳定品质与快速交付服务。</p>
+                <ul>
+                    <li>多年五金冲压制造经验</li>
+                    <li>模具设计与冲压生产一体化</li>
+                    <li>严格质量检验与过程管控</li>
+                    <li>支持 OEM 与定制化项目</li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="section-block services-block">
+    <div class="container shell">
+        <h2 class="section-title">{{ 'Main Services' if session.get('lang') == 'en' else '主要服务' }}</h2>
+        <div class="services-grid">
+            <article class="service-card">
+                <i class="fas fa-cogs"></i>
+                <h3>{{ 'Precision Stamping' if session.get('lang') == 'en' else '精密冲压' }}</h3>
+                <p>{{ 'Undertake precision hardware stamping including drawing, blanking and forming processes.' if session.get('lang') == 'en' else '承接各类精密五金件冲压加工，包括拉伸、落料、成型等工艺。' }}</p>
+            </article>
+            <article class="service-card">
+                <i class="fas fa-tools"></i>
+                <h3>{{ 'Mold Development' if session.get('lang') == 'en' else '模具开发' }}</h3>
+                <p>{{ 'Provide hardware mold design and manufacturing, supporting single die and progressive die development.' if session.get('lang') == 'en' else '提供专业的五金模具设计与制造服务，支持单冲模、连续模开发。' }}</p>
+            </article>
+            <article class="service-card">
+                <i class="fas fa-wrench"></i>
+                <h3>{{ 'Sheet Metal' if session.get('lang') == 'en' else '钣金加工' }}</h3>
+                <p>{{ 'Provide shearing, bending and welding supporting services for sheet metal processing.' if session.get('lang') == 'en' else '提供剪板、折弯、焊接等钣金配套加工服务。' }}</p>
+            </article>
+            <article class="service-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>{{ 'Surface Treatment' if session.get('lang') == 'en' else '表面处理' }}</h3>
+                <p>{{ 'Provide plating, spraying and oxidation services for one-stop delivery.' if session.get('lang') == 'en' else '提供电镀、喷涂、氧化等后续表面处理服务，一站式交付。' }}</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section id="products" class="section-block">
+    <div class="container shell">
+        <h2 class="section-title">{{ 'Our Products' if session.get('lang') == 'en' else '产品展示' }}</h2>
+        <div class="product-grid">
+            {% for product in products %}
+            <a class="product-card product-link" href="{{ url_for('product_detail', product_id=product.id) }}">
+                <img src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}">
+                <div class="product-content">
+                    <h3>{{ product['name_' + session.get('lang', 'zh')] }}</h3>
+                    <p>{{ product['desc_' + session.get('lang', 'zh')] }}</p>
+                    <span>{{ 'View Details' if session.get('lang') == 'en' else '查看详情' }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="section-block contact-block">
+    <div class="container shell">
+        <h2 class="section-title">{{ 'Contact Us' if session.get('lang') == 'en' else '联系我们' }}</h2>
+        <div class="contact-layout">
+            <div class="contact-list">
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <h4>{{ 'Address' if session.get('lang') == 'en' else '工厂地址' }}</h4>
+                        <p>{{ config_val('address') }}</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <div>
+                        <h4>{{ 'Phone' if session.get('lang') == 'en' else '联系电话' }}</h4>
+                        <p>{{ config_val('phone') }}</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fab fa-whatsapp"></i>
+                    <div>
+                        <h4>WhatsApp</h4>
+                        <p>{{ config_val('whatsapp') }}</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <h4>{{ 'Email' if session.get('lang') == 'en' else '电子邮箱' }}</h4>
+                        <p>{{ config_val('email') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="map-box">
+                <iframe src="{{ map_embed_url }}" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

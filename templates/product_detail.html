@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section-block">
+    <div class="container shell detail-layout">
+        <div class="detail-image">
+            <img src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}">
+        </div>
+        <div class="detail-content">
+            <h1>{{ product['name_' + session.get('lang', 'zh')] }}</h1>
+            <h3>{{ 'Product Description' if session.get('lang') == 'en' else '产品描述' }}</h3>
+            <p>{{ product['desc_' + session.get('lang', 'zh')] }}</p>
+            <h3>{{ 'Product Specs' if session.get('lang') == 'en' else '规格参数' }}</h3>
+            <div class="spec-box">{{ product['specs_' + session.get('lang', 'zh')] }}</div>
+            <div class="detail-actions">
+                <a href="{{ url_for('contact') }}" class="hero-btn">{{ 'Inquire Now' if session.get('lang') == 'en' else '立即咨询' }}</a>
+                <a href="{{ url_for('index') }}" class="ghost-btn">{{ 'Back to Home' if session.get('lang') == 'en' else '返回首页' }}</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
