@@ -36,7 +36,12 @@
                 </div>
             </div>
             <div class="map-box">
-                <iframe src="{{ map_embed_url }}" allowfullscreen="" loading="lazy"></iframe>
+                <iframe src="{{ map_embed_url }}" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <div class="mt-2">
+                    <a href="{{ map_link_url }}" target="_blank" rel="noopener noreferrer">
+                        {{ 'Open in Google Maps' if session.get('lang') == 'en' else '在 Google 地图中打开' }}
+                    </a>
+                </div>
             </div>
         </div>
     </div>
