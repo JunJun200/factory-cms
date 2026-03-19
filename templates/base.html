@@ -33,6 +33,7 @@
     <footer class="site-footer">
         <div class="container shell footer-shell">
             <p>&copy; 2026 {{ config_val('company_name') }}. {{ 'All Rights Reserved' if session.get('lang') == 'en' else '版权所有' }}</p>
+            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">冀ICP备2026008128号-1</a>
             <a href="{{ url_for('admin_login') }}">Admin Login</a>
         </div>
     </footer>
