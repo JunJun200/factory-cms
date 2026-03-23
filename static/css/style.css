@@ -389,6 +389,18 @@ a {
     color: #93c5fd;
 }
 
+.footer-beian {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.footer-beian a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 @media (max-width: 992px) {
     .services-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
