@@ -280,7 +280,9 @@ def add_product():
         if 'image' in request.files:
             file = request.files['image']
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
+                import uuid
+                ext = file.filename.rsplit('.', 1)[1].lower()
+                filename = secure_filename(f"prod_{uuid.uuid4().hex[:8]}.{ext}")
                 if not os.path.exists(app.config['UPLOAD_FOLDER']):
                     os.makedirs(app.config['UPLOAD_FOLDER'])
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -290,7 +292,8 @@ def add_product():
         if 'pdf_file' in request.files:
             pdf_file = request.files['pdf_file']
             if pdf_file and pdf_file.filename.lower().endswith('.pdf'):
-                pdf_filename = secure_filename(pdf_file.filename)
+                import uuid
+                pdf_filename = secure_filename(f"spec_{uuid.uuid4().hex[:8]}.pdf")
                 pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename))
                 pdf_path = f"uploads/{pdf_filename}"
 
@@ -306,7 +309,9 @@ def add_product():
             files = request.files.getlist('gallery')
             for file in files:
                 if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
+                    import uuid
+                    ext = file.filename.rsplit('.', 1)[1].lower()
+                    filename = secure_filename(f"gallery_{uuid.uuid4().hex[:8]}.{ext}")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     db.execute('INSERT INTO product_images (product_id, image_path) VALUES (?, ?)', (product_id, f"uploads/{filename}"))
         
@@ -363,7 +368,9 @@ def edit_product(product_id):
             files = request.files.getlist('gallery')
             for file in files:
                 if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
+                    import uuid
+                    ext = file.filename.rsplit('.', 1)[1].lower()
+                    filename = secure_filename(f"gallery_{uuid.uuid4().hex[:8]}.{ext}")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     db.execute('INSERT INTO product_images (product_id, image_path) VALUES (?, ?)', (product_id, f"uploads/{filename}"))
         
