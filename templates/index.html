@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<section class="hero-banner" style="background-image: linear-gradient(rgba(8, 20, 40, 0.45), rgba(8, 20, 40, 0.45)), url('{{ url_for('static', filename='images/factory.jpg') }}');">
+<section class="hero-banner" style="background-image: linear-gradient(rgba(8, 20, 40, 0.45), rgba(8, 20, 40, 0.45)), url(&quot;{{ url_for('static', filename='images/factory.jpg') }}&quot;);">
     <div class="container shell hero-inner">
         <h1>{{ config_val('hero_title') }}</h1>
         <p>{{ config_val('hero_subtitle') }}</p>
@@ -68,7 +68,11 @@
         <div class="product-grid" style="grid-template-columns: repeat(2, 1fr);">
             {% for category in categories %}
             <a class="product-card product-link" href="{{ url_for('category', category_id=category.id) }}">
-                <img src="{{ url_for('static', filename=category.image_path) }}" alt="{{ category['name_' + session.get('lang', 'zh')] }}" loading="lazy">
+                {% if category.image_path %}
+                    <img src="{{ url_for('static', filename=category.image_path) }}" alt="{{ category['name_' + session.get('lang', 'zh')] }}" loading="lazy">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/default.jpg') }}" alt="default" loading="lazy">
+                {% endif %}
                 <div class="product-content text-center">
                     <h3 style="font-size: 24px; margin-bottom: 10px;">{{ category['name_' + session.get('lang', 'zh')] }}</h3>
                     <span class="ghost-btn">{{ 'Enter Category' if session.get('lang') == 'en' else '进入分类' }}</span>
