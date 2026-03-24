@@ -64,15 +64,14 @@
 
 <section id="products" class="section-block">
     <div class="container shell">
-        <h2 class="section-title">{{ 'Our Products' if session.get('lang') == 'en' else '产品展示' }}</h2>
-        <div class="product-grid">
-            {% for product in products %}
-            <a class="product-card product-link" href="{{ url_for('product_detail', product_id=product.id) }}">
-                <img src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}">
-                <div class="product-content">
-                    <h3>{{ product['name_' + session.get('lang', 'zh')] }}</h3>
-                    <p>{{ product['desc_' + session.get('lang', 'zh')] }}</p>
-                    <span>{{ 'View Details' if session.get('lang') == 'en' else '查看详情' }}</span>
+        <h2 class="section-title">{{ 'Product Categories' if session.get('lang') == 'en' else '产品展示' }}</h2>
+        <div class="product-grid" style="grid-template-columns: repeat(2, 1fr);">
+            {% for category in categories %}
+            <a class="product-card product-link" href="{{ url_for('category', category_id=category.id) }}">
+                <img src="{{ url_for('static', filename=category.image_path) }}" alt="{{ category['name_' + session.get('lang', 'zh')] }}" loading="lazy">
+                <div class="product-content text-center">
+                    <h3 style="font-size: 24px; margin-bottom: 10px;">{{ category['name_' + session.get('lang', 'zh')] }}</h3>
+                    <span class="ghost-btn">{{ 'Enter Category' if session.get('lang') == 'en' else '进入分类' }}</span>
                 </div>
             </a>
             {% endfor %}

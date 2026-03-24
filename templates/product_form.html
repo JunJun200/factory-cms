@@ -33,11 +33,31 @@
                     <label class="form-label">英文规格参数</label>
                     <textarea name="specs_en" class="form-control" rows="2">{{ product.specs_en if product else '' }}</textarea>
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">所属分类</label>
+                    <select name="category_id" class="form-select">
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name_zh }} ({{ cat.name_en }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-md-12 mb-3">
-                    <label class="form-label">产品图片</label>
-                    <input type="file" name="image" class="form-control">
+                    <label class="form-label">产品主图 (代表性缩略图)</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
                     {% if product and product.image_path %}
                         <div class="mt-2">当前图片：<img src="{{ url_for('static', filename=product.image_path) }}" height="100"></div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">产品图库 (支持多选)</label>
+                    <input type="file" name="gallery" class="form-control" accept="image/*" multiple>
+                    <div class="form-text">上传更多高清产品图、3D效果图等。</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">规格参数表 (PDF)</label>
+                    <input type="file" name="pdf_file" class="form-control" accept=".pdf">
+                    {% if product and product.pdf_path %}
+                        <div class="mt-2">当前文档：<a href="{{ url_for('static', filename=product.pdf_path) }}" target="_blank">查看 PDF</a></div>
                     {% endif %}
                 </div>
             </div>

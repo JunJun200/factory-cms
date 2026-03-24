@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section-block bg-light py-5">
+    <div class="container shell">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="section-title mb-0" style="text-align: left;">{{ category['name_' + session.get('lang', 'zh')] }}</h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">{{ 'Back to Home' if session.get('lang') == 'en' else '返回首页' }}</a>
+        </div>
+        
+        <div class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+            {% for product in products %}
+            <a class="product-card product-link" href="{{ url_for('product_detail', product_id=product.id) }}">
+                <div class="img-wrapper" style="overflow: hidden; aspect-ratio: 4/3;">
+                    <img src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}" loading="lazy" class="zoom-img">
+                </div>
+                <div class="product-content">
+                    <h3>{{ product['name_' + session.get('lang', 'zh')] }}</h3>
+                    <p class="text-truncate">{{ product['desc_' + session.get('lang', 'zh')] }}</p>
+                    <span class="ghost-btn">{{ 'View Specs' if session.get('lang') == 'en' else '查看规格' }}</span>
+                </div>
+            </a>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">{{ 'No products found in this category.' if session.get('lang') == 'en' else '暂无产品' }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

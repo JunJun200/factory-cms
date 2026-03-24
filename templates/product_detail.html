@@ -1,20 +1,53 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<section class="section-block bg-light py-4">
+    <div class="container shell">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">{{ 'Home' if session.get('lang') == 'en' else '首页' }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('category', category_id=product.category_id) }}">{{ 'Category' if session.get('lang') == 'en' else '分类' }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ product['name_' + session.get('lang', 'zh')] }}</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
 <section class="section-block">
     <div class="container shell detail-layout">
-        <div class="detail-image">
-            <img src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}">
+        <div class="detail-gallery">
+            <div class="main-image mb-3">
+                <img id="mainImage" src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}" class="img-fluid rounded shadow-sm zoom-img">
+            </div>
+            {% if images %}
+            <div class="thumbnail-list d-flex gap-2 overflow-auto pb-2">
+                <img src="{{ url_for('static', filename=product_image_path(product)) }}" class="thumb-img active rounded border" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" onclick="document.getElementById('mainImage').src=this.src">
+                {% for img in images %}
+                <img src="{{ url_for('static', filename=img.image_path) }}" class="thumb-img rounded border" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" onclick="document.getElementById('mainImage').src=this.src">
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         <div class="detail-content">
-            <h1>{{ product['name_' + session.get('lang', 'zh')] }}</h1>
-            <h3>{{ 'Product Description' if session.get('lang') == 'en' else '产品描述' }}</h3>
-            <p>{{ product['desc_' + session.get('lang', 'zh')] }}</p>
-            <h3>{{ 'Product Specs' if session.get('lang') == 'en' else '规格参数' }}</h3>
-            <div class="spec-box">{{ product['specs_' + session.get('lang', 'zh')] }}</div>
-            <div class="detail-actions">
-                <a href="{{ url_for('contact') }}" class="hero-btn">{{ 'Inquire Now' if session.get('lang') == 'en' else '立即咨询' }}</a>
-                <a href="{{ url_for('index') }}" class="ghost-btn">{{ 'Back to Home' if session.get('lang') == 'en' else '返回首页' }}</a>
+            <h1 class="mb-3">{{ product['name_' + session.get('lang', 'zh')] }}</h1>
+            <div class="mb-4">
+                <h3 class="h5 text-primary border-bottom pb-2">{{ 'Product Description' if session.get('lang') == 'en' else '产品描述' }}</h3>
+                <p class="text-secondary">{{ product['desc_' + session.get('lang', 'zh')] }}</p>
+            </div>
+            <div class="mb-4">
+                <h3 class="h5 text-primary border-bottom pb-2">{{ 'Product Specs' if session.get('lang') == 'en' else '规格参数' }}</h3>
+                <div class="spec-box bg-light p-3 rounded">
+                    {{ product['specs_' + session.get('lang', 'zh')] | replace('\n', '<br>') | safe }}
+                </div>
+            </div>
+            <div class="detail-actions d-flex gap-3 mt-5">
+                <a href="{{ url_for('contact') }}" class="btn btn-primary px-4 py-2">{{ 'Inquire Now' if session.get('lang') == 'en' else '立即咨询' }}</a>
+                {% if product.pdf_path %}
+                <a href="{{ url_for('static', filename=product.pdf_path) }}" target="_blank" class="btn btn-outline-danger px-4 py-2">
+                    <i class="fas fa-file-pdf me-2"></i>{{ 'Download Specs PDF' if session.get('lang') == 'en' else '下载规格参数PDF' }}
+                </a>
+                {% endif %}
+                <a href="{{ url_for('category', category_id=product.category_id) }}" class="btn btn-outline-secondary px-4 py-2">{{ 'Back' if session.get('lang') == 'en' else '返回列表' }}</a>
             </div>
         </div>
     </div>

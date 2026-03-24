@@ -4,6 +4,7 @@
     <title>后台管理 - {{ config_val('company_name') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
@@ -16,8 +17,26 @@
         </div>
     </nav>
     <div class="container py-4">
-        <div class="row">
-            <div class="col-md-12 mb-4">
+        
+        <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">产品管理</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab">分类管理</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab">网站配置</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab">操作日志</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabsContent">
+            
+            <!-- Products Tab -->
+            <div class="tab-pane fade show active" id="products" role="tabpanel">
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">产品管理</h4>
@@ -29,6 +48,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>图片</th>
+                                    <th>所属分类</th>
                                     <th>中文名称</th>
                                     <th>英文名称</th>
                                     <th>操作</th>
@@ -39,6 +59,7 @@
                                 <tr>
                                     <td>{{ product.id }}</td>
                                     <td><img src="{{ url_for('static', filename=product.image_path) }}" height="50"></td>
+                                    <td>{{ product.category_name }}</td>
                                     <td>{{ product.name_zh }}</td>
                                     <td>{{ product.name_en }}</td>
                                     <td>
@@ -52,8 +73,79 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="col-md-12">
+
+            <!-- Categories Tab -->
+            <div class="tab-pane fade" id="categories" role="tabpanel">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">新增分类</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('add_category') }}" enctype="multipart/form-data" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">中文名称</label>
+                                <input type="text" class="form-control" name="name_zh" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">英文名称</label>
+                                <input type="text" class="form-control" name="name_en" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">排序</label>
+                                <input type="number" class="form-control" name="sort_order" value="0">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">分类图片</label>
+                                <input type="file" class="form-control" name="image" accept="image/*">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100">添加</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0">分类列表</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>排序</th>
+                                    <th>图片</th>
+                                    <th>中文名称</th>
+                                    <th>英文名称</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cat in categories %}
+                                <tr>
+                                    <td>{{ cat.id }}</td>
+                                    <td>{{ cat.sort_order }}</td>
+                                    <td>
+                                        {% if cat.image_path %}
+                                        <img src="{{ url_for('static', filename=cat.image_path) }}" height="40">
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ cat.name_zh }}</td>
+                                    <td>{{ cat.name_en }}</td>
+                                    <td>
+                                        <a href="{{ url_for('delete_category', category_id=cat.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('确认删除该分类吗？')"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div class="tab-pane fade" id="config" role="tabpanel">
                 <div class="card shadow-sm">
                     <div class="card-header bg-secondary text-white">
                         <h4 class="mb-0">网站配置（中英文文案）</h4>
@@ -83,6 +175,40 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Logs Tab -->
+            <div class="tab-pane fade" id="logs" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">
+                        <h4 class="mb-0">操作日志</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>操作人</th>
+                                    <th>操作</th>
+                                    <th>目标</th>
+                                    <th>详情</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.created_at }}</td>
+                                    <td>{{ log.operator }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ log.action }}</span></td>
+                                    <td>{{ log.target }}</td>
+                                    <td>{{ log.details }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </body>

@@ -45,7 +45,9 @@ def init_db():
                 desc_en TEXT,
                 specs_zh TEXT,
                 specs_en TEXT,
-                image_path TEXT
+                image_path TEXT,
+                category_id INTEGER DEFAULT 1,
+                pdf_path TEXT
             )
         ''')
         # Create Config Table (for general site text)
@@ -56,12 +58,47 @@ def init_db():
                 value_en TEXT
             )
         ''')
+        # Create Categories Table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name_zh TEXT NOT NULL,
+                name_en TEXT NOT NULL,
+                image_path TEXT,
+                sort_order INTEGER DEFAULT 0
+            )
+        ''')
+        # Create Product Images Table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS product_images (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER,
+                image_path TEXT
+            )
+        ''')
+        # Create Operation Logs Table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS operation_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                operator TEXT,
+                action TEXT,
+                target TEXT,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         
         # Check if config exists, if not seed it
         cursor = db.execute('SELECT * FROM site_config LIMIT 1')
         if not cursor.fetchone():
             seed_data(db)
         ensure_contact_config(db)
+        
+        # Ensure categories exist
+        cursor = db.execute('SELECT count(*) FROM categories')
+        if cursor.fetchone()[0] == 0:
+            db.execute('INSERT INTO categories (name_zh, name_en, image_path, sort_order) VALUES (?, ?, ?, ?)', ('连接件', 'Connectors', 'images/factory.jpg', 1))
+            db.execute('INSERT INTO categories (name_zh, name_en, image_path, sort_order) VALUES (?, ?, ?, ?)', ('定制件', 'Custom Parts', 'images/factory.jpg', 2))
             
         db.commit()
 
@@ -141,15 +178,31 @@ app.jinja_env.globals.update(
     product_image_path=product_image_path
 )
 
+def log_operation(action, target, details=''):
+    if not session.get('logged_in'): return
+    db = get_db()
+    db.execute('INSERT INTO operation_logs (operator, action, target, details) VALUES (?, ?, ?, ?)',
+               ('admin', action, target, details))
+    db.commit()
+
 # --- Routes ---
 
 @app.route('/')
 def index():
     db = get_db()
-    products = db.execute('SELECT * FROM products LIMIT 4').fetchall()
+    categories = db.execute('SELECT * FROM categories ORDER BY sort_order').fetchall()
     map_embed_url = get_map_embed_url()
     map_link_url = get_map_link_url()
-    return render_template('index.html', products=products, map_embed_url=map_embed_url, map_link_url=map_link_url)
+    return render_template('index.html', categories=categories, map_embed_url=map_embed_url, map_link_url=map_link_url)
+
+@app.route('/category/<int:category_id>')
+def category(category_id):
+    db = get_db()
+    category = db.execute('SELECT * FROM categories WHERE id = ?', (category_id,)).fetchone()
+    if not category:
+        return "Category not found", 404
+    products = db.execute('SELECT * FROM products WHERE category_id = ?', (category_id,)).fetchall()
+    return render_template('category.html', category=category, products=products)
 
 @app.route('/set_lang/<lang>')
 def set_lang(lang):
@@ -163,7 +216,8 @@ def product_detail(product_id):
     product = db.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
     if not product:
         return "Product not found", 404
-    return render_template('product_detail.html', product=product)
+    images = db.execute('SELECT * FROM product_images WHERE product_id = ?', (product_id,)).fetchall()
+    return render_template('product_detail.html', product=product, images=images)
 
 @app.route('/contact')
 def contact():
@@ -197,14 +251,21 @@ def admin_dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('admin_login'))
     db = get_db()
-    products = db.execute('SELECT * FROM products').fetchall()
+    categories = db.execute('SELECT * FROM categories ORDER BY sort_order').fetchall()
+    products = db.execute('''
+        SELECT p.*, c.name_zh as category_name
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+    ''').fetchall()
     configs = db.execute('SELECT * FROM site_config').fetchall()
-    return render_template('admin_dashboard.html', products=products, configs=configs)
+    logs = db.execute('SELECT * FROM operation_logs ORDER BY created_at DESC LIMIT 50').fetchall()
+    return render_template('admin_dashboard.html', categories=categories, products=products, configs=configs, logs=logs)
 
 @app.route('/admin/product/add', methods=['GET', 'POST'])
 def add_product():
     if not session.get('logged_in'):
         return redirect(url_for('admin_login'))
+    db = get_db()
     
     if request.method == 'POST':
         name_zh = request.form['name_zh']
@@ -213,27 +274,48 @@ def add_product():
         desc_en = request.form['desc_en']
         specs_zh = request.form['specs_zh']
         specs_en = request.form['specs_en']
+        category_id = request.form.get('category_id', 1)
         
         image_path = ''
         if 'image' in request.files:
             file = request.files['image']
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                # Ensure directory exists
                 if not os.path.exists(app.config['UPLOAD_FOLDER']):
                     os.makedirs(app.config['UPLOAD_FOLDER'])
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_path = f"uploads/{filename}"
 
-        db = get_db()
-        db.execute('''
-            INSERT INTO products (name_zh, name_en, desc_zh, desc_en, specs_zh, specs_en, image_path)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (name_zh, name_en, desc_zh, desc_en, specs_zh, specs_en, image_path))
+        pdf_path = ''
+        if 'pdf_file' in request.files:
+            pdf_file = request.files['pdf_file']
+            if pdf_file and pdf_file.filename.lower().endswith('.pdf'):
+                pdf_filename = secure_filename(pdf_file.filename)
+                pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename))
+                pdf_path = f"uploads/{pdf_filename}"
+
+        cursor = db.execute('''
+            INSERT INTO products (name_zh, name_en, desc_zh, desc_en, specs_zh, specs_en, image_path, category_id, pdf_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name_zh, name_en, desc_zh, desc_en, specs_zh, specs_en, image_path, category_id, pdf_path))
+        
+        product_id = cursor.lastrowid
+        
+        # Multiple images
+        if 'gallery' in request.files:
+            files = request.files.getlist('gallery')
+            for file in files:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    db.execute('INSERT INTO product_images (product_id, image_path) VALUES (?, ?)', (product_id, f"uploads/{filename}"))
+        
         db.commit()
+        log_operation('Add Product', name_zh, f'Added product ID {product_id}')
         return redirect(url_for('admin_dashboard'))
         
-    return render_template('product_form.html', action='add')
+    categories = db.execute('SELECT * FROM categories').fetchall()
+    return render_template('product_form.html', action='add', categories=categories)
 
 @app.route('/admin/product/edit/<int:product_id>', methods=['GET', 'POST'])
 def edit_product(product_id):
@@ -248,10 +330,11 @@ def edit_product(product_id):
         desc_en = request.form['desc_en']
         specs_zh = request.form['specs_zh']
         specs_en = request.form['specs_en']
+        category_id = request.form.get('category_id', 1)
         
         # Handle Image
-        image_update_sql = ""
-        params = [name_zh, name_en, desc_zh, desc_en, specs_zh, specs_en]
+        update_sql = "name_zh=?, name_en=?, desc_zh=?, desc_en=?, specs_zh=?, specs_en=?, category_id=?"
+        params = [name_zh, name_en, desc_zh, desc_en, specs_zh, specs_en, category_id]
         
         if 'image' in request.files:
             file = request.files['image']
@@ -260,30 +343,80 @@ def edit_product(product_id):
                 if not os.path.exists(app.config['UPLOAD_FOLDER']):
                     os.makedirs(app.config['UPLOAD_FOLDER'])
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                image_update_sql = ", image_path = ?"
+                update_sql += ", image_path=?"
                 params.append(f"uploads/{filename}")
+
+        if 'pdf_file' in request.files:
+            pdf_file = request.files['pdf_file']
+            if pdf_file and pdf_file.filename.lower().endswith('.pdf'):
+                pdf_filename = secure_filename(pdf_file.filename)
+                pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename))
+                update_sql += ", pdf_path=?"
+                params.append(f"uploads/{pdf_filename}")
+                
+        # Multiple images (append)
+        if 'gallery' in request.files:
+            files = request.files.getlist('gallery')
+            for file in files:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    db.execute('INSERT INTO product_images (product_id, image_path) VALUES (?, ?)', (product_id, f"uploads/{filename}"))
         
         params.append(product_id)
         
-        db.execute(f'''
-            UPDATE products SET 
-            name_zh=?, name_en=?, desc_zh=?, desc_en=?, specs_zh=?, specs_en=?
-            {image_update_sql}
-            WHERE id=?
-        ''', params)
+        db.execute(f'UPDATE products SET {update_sql} WHERE id=?', params)
         db.commit()
+        log_operation('Edit Product', name_zh, f'Updated product ID {product_id}')
         return redirect(url_for('admin_dashboard'))
 
     product = db.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
-    return render_template('product_form.html', product=product, action='edit')
+    categories = db.execute('SELECT * FROM categories').fetchall()
+    return render_template('product_form.html', product=product, action='edit', categories=categories)
 
 @app.route('/admin/product/delete/<int:product_id>')
 def delete_product(product_id):
     if not session.get('logged_in'):
         return redirect(url_for('admin_login'))
     db = get_db()
-    db.execute('DELETE FROM products WHERE id = ?', (product_id,))
+    product = db.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+    if product:
+        db.execute('DELETE FROM products WHERE id = ?', (product_id,))
+        db.execute('DELETE FROM product_images WHERE product_id = ?', (product_id,))
+        db.commit()
+        log_operation('Delete Product', product['name_zh'], f'Deleted product ID {product_id}')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/category/add', methods=['POST'])
+def add_category():
+    if not session.get('logged_in'): return redirect(url_for('admin_login'))
+    name_zh = request.form['name_zh']
+    name_en = request.form['name_en']
+    sort_order = request.form.get('sort_order', 0)
+    image_path = ''
+    if 'image' in request.files:
+        file = request.files['image']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            image_path = f"uploads/{filename}"
+    db = get_db()
+    db.execute('INSERT INTO categories (name_zh, name_en, image_path, sort_order) VALUES (?, ?, ?, ?)',
+               (name_zh, name_en, image_path, sort_order))
     db.commit()
+    log_operation('Add Category', name_zh)
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/category/delete/<int:category_id>')
+def delete_category(category_id):
+    if not session.get('logged_in'): return redirect(url_for('admin_login'))
+    db = get_db()
+    category = db.execute('SELECT * FROM categories WHERE id = ?', (category_id,)).fetchone()
+    if category:
+        db.execute('DELETE FROM categories WHERE id = ?', (category_id,))
+        db.execute('UPDATE products SET category_id = NULL WHERE category_id = ?', (category_id,))
+        db.commit()
+        log_operation('Delete Category', category['name_zh'])
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/config/update', methods=['POST'])

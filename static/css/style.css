@@ -214,16 +214,32 @@ a {
     box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-link {
-    display: block;
+    display: flex;
+    flex-direction: column;
     color: inherit;
+    height: 100%;
 }
 
 .product-link:hover {
     transform: translateY(-6px);
     box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
+}
+
+.product-link:hover .zoom-img {
+    transform: scale(1.05);
+}
+
+.product-card .img-wrapper {
+    overflow: hidden;
+}
+
+.zoom-img {
+    transition: transform 0.4s ease;
 }
 
 .product-card img {
@@ -235,6 +251,9 @@ a {
 
 .product-content {
     padding: 18px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-content h3 {
@@ -401,7 +420,14 @@ a {
     gap: 6px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
+    .shell {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+@media (max-width: 768px) {
     .services-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -424,10 +450,24 @@ a {
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 375px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-inner h1 {
+        font-size: 32px;
+    }
+    
+    .brand {
+        font-size: 24px;
+    }
+
     .site-header .shell {
         flex-wrap: wrap;
         justify-content: center;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .brand {
@@ -456,6 +496,7 @@ a {
     .detail-content h1 {
         font-size: 34px;
     }
+}
 
     .detail-actions {
         flex-direction: column;
