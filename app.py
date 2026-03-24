@@ -383,7 +383,16 @@ def edit_product(product_id):
 
     product = db.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
     categories = db.execute('SELECT * FROM categories').fetchall()
-    return render_template('product_form.html', product=product, action='edit', categories=categories)
+    images = db.execute('SELECT * FROM product_images WHERE product_id = ?', (product_id,)).fetchall()
+    return render_template('product_form.html', product=product, action='edit', categories=categories, images=images)
+
+@app.route('/admin/product/image/delete/<int:product_id>/<int:image_id>')
+def delete_product_image(product_id, image_id):
+    if not session.get('logged_in'): return redirect(url_for('admin_login'))
+    db = get_db()
+    db.execute('DELETE FROM product_images WHERE id = ? AND product_id = ?', (image_id, product_id))
+    db.commit()
+    return redirect(url_for('edit_product', product_id=product_id))
 
 @app.route('/admin/product/delete/<int:product_id>')
 def delete_product(product_id):

@@ -52,6 +52,16 @@
                     <label class="form-label">产品图库 (支持多选)</label>
                     <input type="file" name="gallery" class="form-control" accept="image/*" multiple>
                     <div class="form-text">上传更多高清产品图、3D效果图等。</div>
+                    {% if images %}
+                        <div class="mt-2 d-flex gap-2 flex-wrap">
+                            {% for img in images %}
+                            <div class="position-relative">
+                                <img src="{{ url_for('static', filename=img.image_path) }}" height="60" class="border rounded">
+                                <a href="{{ url_for('delete_product_image', image_id=img.id, product_id=product.id) }}" class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1" style="font-size: 10px; transform: translate(50%, -50%);" onclick="return confirm('确认删除该图片？')">×</a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">规格参数表 (PDF)</label>

@@ -17,7 +17,7 @@
     <div class="container shell detail-layout">
         <div class="detail-gallery">
             <div class="main-image mb-3">
-                <img id="mainImage" src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}" class="img-fluid rounded shadow-sm zoom-img">
+                <img id="mainImage" src="{{ url_for('static', filename=product_image_path(product)) }}" alt="{{ product['name_' + session.get('lang', 'zh')] }}" class="img-fluid rounded shadow-sm zoom-img w-100" style="object-fit: cover; aspect-ratio: 4/3;">
             </div>
             {% if images %}
             <div class="thumbnail-list d-flex gap-2 overflow-auto pb-2">
