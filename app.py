@@ -339,7 +339,10 @@ def edit_product(product_id):
         if 'image' in request.files:
             file = request.files['image']
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
+                import uuid
+                # Use a unique filename to prevent browser caching issues when updating
+                ext = file.filename.rsplit('.', 1)[1].lower()
+                filename = secure_filename(f"{uuid.uuid4().hex}.{ext}")
                 if not os.path.exists(app.config['UPLOAD_FOLDER']):
                     os.makedirs(app.config['UPLOAD_FOLDER'])
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -349,10 +352,11 @@ def edit_product(product_id):
         if 'pdf_file' in request.files:
             pdf_file = request.files['pdf_file']
             if pdf_file and pdf_file.filename.lower().endswith('.pdf'):
-                pdf_filename = secure_filename(pdf_file.filename)
-                pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename))
+                import uuid
+                filename = secure_filename(f"spec_{uuid.uuid4().hex[:8]}.pdf")
+                pdf_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 update_sql += ", pdf_path=?"
-                params.append(f"uploads/{pdf_filename}")
+                params.append(f"uploads/{filename}")
                 
         # Multiple images (append)
         if 'gallery' in request.files:
@@ -406,6 +410,38 @@ def add_category():
     db.commit()
     log_operation('Add Category', name_zh)
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/category/edit/<int:category_id>', methods=['GET', 'POST'])
+def edit_category(category_id):
+    if not session.get('logged_in'): return redirect(url_for('admin_login'))
+    db = get_db()
+    
+    if request.method == 'POST':
+        name_zh = request.form['name_zh']
+        name_en = request.form['name_en']
+        sort_order = request.form.get('sort_order', 0)
+        
+        update_sql = "name_zh=?, name_en=?, sort_order=?"
+        params = [name_zh, name_en, sort_order]
+        
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                import uuid
+                ext = file.filename.rsplit('.', 1)[1].lower()
+                filename = secure_filename(f"cat_{uuid.uuid4().hex[:8]}.{ext}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                update_sql += ", image_path=?"
+                params.append(f"uploads/{filename}")
+                
+        params.append(category_id)
+        db.execute(f'UPDATE categories SET {update_sql} WHERE id=?', params)
+        db.commit()
+        log_operation('Edit Category', name_zh)
+        return redirect(url_for('admin_dashboard'))
+        
+    category = db.execute('SELECT * FROM categories WHERE id = ?', (category_id,)).fetchone()
+    return render_template('category_form.html', category=category)
 
 @app.route('/admin/category/delete/<int:category_id>')
 def delete_category(category_id):
