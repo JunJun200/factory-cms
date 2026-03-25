@@ -44,8 +44,8 @@ a {
 }
 
 .brand img {
-    width: 140px;
-    height: 140px;
+    width: 180px;
+    height: 180px;
     object-fit: contain;
 }
 
@@ -496,7 +496,6 @@ a {
     .detail-content h1 {
         font-size: 34px;
     }
-}
 
     .detail-actions {
         flex-direction: column;
